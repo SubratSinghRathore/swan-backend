@@ -10,6 +10,32 @@ import cloudinary from "../utilities/cloudinary.js";
 
 auth.use(express.json());
 
+auth.post('/attempt', async (req, res) => {
+    const user_name = req.body.user_name;
+    try {
+        const sql = 'SELECT user_name FROM users WHERE user_name = ?';
+        const values = [user_name];
+        const [existingUser] = await pool.query(sql, values);
+        if (!existingUser[0]) {
+            return res.status(200).json({
+                availability: true
+            });
+        } else {
+            return res.status(200).json({
+                availability: false
+            });
+        }
+    } catch (error) {
+        console.log('error in checking username availability',error);
+    }
+})
+
+auth.get('/me',authMiddleware , async (req, res) => {
+    res.status(200).json({
+        userData: req.user
+    });
+});
+
 auth.post("/signup", async (req, res) => {
     let { user_name, user_email, user_password, user_mobile_no, user_profile_url } = req.body;
 
@@ -78,7 +104,6 @@ auth.post("/login", async (req, res) => {
 
             //comparing the password
             if (resultForUserDetail.length !== 0) {
-                console.log("till clear finding by email")
                 for (let i = 0; i < resultForUserDetail.length; i++) {
                     const isPasswordCorrect = await bcrypt.compare(user_password, resultForUserDetail[i].user_password);
                     if (isPasswordCorrect) {

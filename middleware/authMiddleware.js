@@ -14,7 +14,7 @@ const authMiddleware = async (req, res, next) => {
             return res.status(401).json({ message: 'Unauthorized' });
         } else {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
-            const sqlForAuthentication = 'SELECT * FROM users WHERE user_name = ? AND user_email = ? AND user_id = ?';
+            const sqlForAuthentication = 'SELECT user_id, user_name, user_email, user_mobile_no, user_profile_url FROM users WHERE user_name = ? AND user_email = ? AND user_id = ?';
             const valuesForAuthentication = [decoded.user_name, decoded.user_email, decoded.user_id];
             const [userDetailsMatch] = await pool.query(sqlForAuthentication, valuesForAuthentication);
             if (userDetailsMatch === 0) {
