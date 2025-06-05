@@ -237,7 +237,10 @@ auth.post('/update/profile', authMiddleware, async (req, res) => {
                         return res.status(200).json({ msg: 'No update needed, URL unchanged' });
                     }
 
-                    return res.status(200).json({ msg: 'Profile URL updated successfully' });
+                    return res.status(200).json({
+                        msg: 'Profile URL updated successfully',
+                        user_profile_url
+                    });
 
                 }
 
