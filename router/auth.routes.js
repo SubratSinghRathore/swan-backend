@@ -26,11 +26,11 @@ auth.post('/attempt', async (req, res) => {
             });
         }
     } catch (error) {
-        console.log('error in checking username availability',error);
+        console.log('error in checking username availability', error);
     }
 })
 
-auth.get('/me',authMiddleware , async (req, res) => {
+auth.get('/me', authMiddleware, async (req, res) => {
     res.status(200).json({
         userData: req.user
     });
@@ -92,91 +92,72 @@ auth.post("/signup", async (req, res) => {
 
 
 auth.post("/login", async (req, res) => {
-    //need to work on if any input undefined shows error
-    const { user_email, user_name, user_password } = req.body;
 
-    if (user_email) {
-        try {
-            //checking the user in database
-            const sqlForUserDetail = 'SELECT * FROM users WHERE user_email = ?';
-            const valueForUserDetail = [user_email];
-            const [resultForUserDetail] = await pool.query(sqlForUserDetail, valueForUserDetail);
+    try {
+        //assigning values
+        const { user_email_or_user_name, user_password } = req.body;
+        const user_email = user_email_or_user_name;
+        const user_name = user_email_or_user_name;
 
-            //comparing the password
-            if (resultForUserDetail.length !== 0) {
-                for (let i = 0; i < resultForUserDetail.length; i++) {
-                    const isPasswordCorrect = await bcrypt.compare(user_password, resultForUserDetail[i].user_password);
-                    if (isPasswordCorrect) {
-                        //creating jwt token and storing in cookie as user device
-                        genToken(resultForUserDetail[i].user_name, resultForUserDetail[i].user_email, resultForUserDetail[i].user_id, res);
+        //checking the user in database by email
+        const sqlForUserDetail = 'SELECT * FROM users WHERE user_email = ?';
+        const valueForUserDetail = [user_email];
+        const [resultForUserDetail] = await pool.query(sqlForUserDetail, valueForUserDetail);
 
-                        return res.status(200).json({
-                            user_id: resultForUserDetail[i].user_id,
-                            user_email: resultForUserDetail[i].user_email,
-                            user_name: resultForUserDetail[i].user_name,
-                            user_profile_url: resultForUserDetail[i].user_profile_url
-                        });
-                    }
-                } res.status(400).json({
-                    msg: "invalid credentials"
-                })
+        //comparing the password
+        if (resultForUserDetail.length !== 0) {
+            for (let i = 0; i < resultForUserDetail.length; i++) {
+                const isPasswordCorrect = await bcrypt.compare(user_password, resultForUserDetail[i].user_password);
+                if (isPasswordCorrect) {
+                    //creating jwt token and storing in cookie as user device
+                    genToken(resultForUserDetail[i].user_name, resultForUserDetail[i].user_email, resultForUserDetail[i].user_id, res);
 
-            } else {
-                res.status(400).json({
-                    msg: "invalid credentials"
-                })
+                    return res.status(200).json({
+                        user_id: resultForUserDetail[i].user_id,
+                        user_email: resultForUserDetail[i].user_email,
+                        user_name: resultForUserDetail[i].user_name,
+                        user_profile_url: resultForUserDetail[i].user_profile_url
+                    });
+                }
             }
-            //checking 
+        } else {
+            //checking the user in database by username
+            try {
+                //checking the user in database
+                const sqlForUserDetail = 'SELECT * FROM users WHERE user_name = ?';
+                const valueForUserDetail = [user_name];
+                const [resultForUserDetail] = await pool.query(sqlForUserDetail, valueForUserDetail);
 
-        } catch (error) {
-            console.log(error)
-        }
-    } else if (user_name) {
-        try {
-            //checking the user in database
-            const sqlForUserDetail = 'SELECT * FROM users WHERE user_name = ?';
-            const valueForUserDetail = [user_name];
-            const [resultForUserDetail] = await pool.query(sqlForUserDetail, valueForUserDetail);
+                //comparing the password
+                if (resultForUserDetail.length !== 0) {
+                    for (let i = 0; i < resultForUserDetail.length; i++) {
+                        const isPasswordCorrect = await bcrypt.compare(user_password, resultForUserDetail[i].user_password);
+                        if (isPasswordCorrect) {
 
-            //comparing the password
-            if (resultForUserDetail.length !== 0) {
-                for (let i = 0; i < resultForUserDetail.length; i++) {
-                    const isPasswordCorrect = await bcrypt.compare(user_password, resultForUserDetail[i].user_password);
-                    if (isPasswordCorrect) {
+                            //creating jwt token and storing in cookie as user device
+                            genToken(resultForUserDetail[i].user_name, resultForUserDetail[i].user_email, resultForUserDetail[i].user_id, res);
 
-                        //creating jwt token and storing in cookie as user device
-                        genToken(resultForUserDetail[i].user_name, resultForUserDetail[i].user_email, resultForUserDetail[i].user_id, res);
-
-                        res.status(200).json({
-                            user_id: resultForUserDetail[i].user_id,
-                            user_email: resultForUserDetail[i].user_email,
-                            user_name: resultForUserDetail[i].user_name,
-                            user_profile_url: resultForUserDetail[i].user_profile_url
-                        });
-                        break;
-                    }
-                } res.status(400).json({
-                    msg: "invalid credentials"
-                })
-            } else {
-                res.status(400).json({
-                    msg: 'invalid credentials'
-                });
+                            return res.status(200).json({
+                                user_id: resultForUserDetail[i].user_id,
+                                user_email: resultForUserDetail[i].user_email,
+                                user_name: resultForUserDetail[i].user_name,
+                                user_profile_url: resultForUserDetail[i].user_profile_url
+                            });
+                        }
+                    };
+                } else {
+                    return res.status(400).json({
+                        msg: 'invalid credentials'
+                    });
+                }
+            } catch (error) {
+                console.log('error in login', error);
             }
-            //checking 
-        } catch (error) {
-
         }
-    } else {
-        res.status(400).json({
-            msg: 'invalid credentials'
-        });
+
+    } catch (error) {
+        console.log('error in login', error);
     }
-
-
-
-
-
 });
 
 
