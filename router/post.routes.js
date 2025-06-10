@@ -21,10 +21,27 @@ router.post('/image', authMiddleware, async (req, res) => {
         const [resultForimage] = await pool.query(sql, values);
 
         //sending response back to user
-        return res.status(200).json({ msg: resultForimage });
+        if (resultForimage.affectedRows == 1) {
+            return res.status(200).json({ msg: "upload successful" });
+        } else {
+            return res.status(200).json({ msg: "upload unsuccessful" });
+        }
+
     } catch (error) {
         console.log("error in posting image", error);
     }
 })
+
+router.put('/like', authMiddleware, async (req, res) => {
+    try {
+        const post_id = req.body.post_id;
+        const sql = 'UPDATE posts SET total_likes = total_likes + 1 WHERE post_id = ?';
+        const values = [post_id]
+        const [postLike] = await pool.query(sql, values);
+        return res.status(200).json({msg: 'Post like successfully'})
+    } catch (error) {
+        console.log('error in adding like to post', error);
+    }
+});
 
 export default router;
