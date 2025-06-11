@@ -12,7 +12,7 @@ router.post('/image', authMiddleware, async (req, res) => {
         var { image, description } = req.body;
         if (!image) { return res.status(400).json({ msg: 'image not found' }) };
         if (!description) { description = 'no description' };
-        const uploadImage = await cloudinary.uploader.upload(image);
+        const uploadImage = await cloudinary.uploader.upload(image, {width: 1000, height: 1000, crop: 'auto', gravity: 'auto'});
         const uploadImageUrl = uploadImage.secure_url;
 
         //storing uri in database

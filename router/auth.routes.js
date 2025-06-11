@@ -202,7 +202,7 @@ auth.post('/update/profile', authMiddleware, async (req, res) => {
                     });
                 } else {
 
-                    const uploadPicture = await cloudinary.uploader.upload(profile_pic);
+                    const uploadPicture = await cloudinary.uploader.upload(profile_pic, {width: 1000, height: 1000, crop: "auto", gravity: "auto"});
                     const user_profile_url = uploadPicture.secure_url;
 
                     //reseting new profile picture
