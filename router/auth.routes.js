@@ -36,6 +36,18 @@ auth.get('/me', authMiddleware, async (req, res) => {
     });
 });
 
+auth.get('/users',authMiddleware ,async (req, res) => {
+    try {
+        const sql = 'SELECT user_id, user_name, user_profile_url FROM users';
+        const [users] = await pool.query(sql);
+        res.status(200).json({
+            users
+        })
+    } catch (error) {
+        console.log("error in fetching users from database", error);
+    }
+});
+
 auth.post("/signup", async (req, res) => {
     let { user_name, user_email, user_password, user_mobile_no, user_profile_url } = req.body;
 

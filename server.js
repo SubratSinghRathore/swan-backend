@@ -2,7 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 import cookieParser from 'cookie-parser';
 import express from 'express';
-const app = express();
+import { app, server } from './websocket/socket.js';
+
 import cors from 'cors';
 
 import auth from "./router/auth.routes.js";
@@ -25,4 +26,4 @@ app.get("/", async (req, res) => {
     res.send('all perfect')
 })
 
-app.listen(process.env.PORT, ()=> console.log('listening on port:', process.env.PORT))
+server.listen(process.env.PORT, ()=> console.log('listening on port:', process.env.PORT))
