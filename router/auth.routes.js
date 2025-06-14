@@ -38,8 +38,10 @@ auth.get('/me', authMiddleware, async (req, res) => {
 
 auth.get('/users',authMiddleware ,async (req, res) => {
     try {
-        const sql = 'SELECT user_id, user_name, user_profile_url FROM users';
-        const [users] = await pool.query(sql);
+        const user_id = req.user.user_id;
+        const sql = 'SELECT user_id, user_name, user_profile_url FROM users WHERE user_id != ?';
+        const values = [user_id]
+        const [users] = await pool.query(sql, values);
         res.status(200).json({
             users
         })

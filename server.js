@@ -9,6 +9,7 @@ import cors from 'cors';
 import auth from "./router/auth.routes.js";
 import post from "./router/post.routes.js";
 import feed from './router/allposts.route.js';
+import message from './router/message.route.js';
 
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -21,6 +22,7 @@ app.use(express.json({limit: '10mb'}));
 app.use("/auth", auth);
 app.use('/post', post);
 app.use('/feed', feed);
+app.use('/message', message);
 
 app.get("/", async (req, res) => {
     res.send('all perfect')
