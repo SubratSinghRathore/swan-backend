@@ -50,7 +50,7 @@ route.get('/friends', authMiddleware, async (req, res) => {
 route.post('/friendDetails', authMiddleware, async (req, res) => {
     try {
         const friend_id = req.body.friend_id;
-        const sql = 'SELECT user_name, user_profile_url FROM users WHERE user_id = ?';
+        const sql = 'SELECT user_id, user_name, user_profile_url FROM users WHERE user_id = ?';
         const values = [friend_id];
         const [friendDetails] = await pool.query(sql, values);
         if(friendDetails) {
@@ -60,5 +60,19 @@ route.post('/friendDetails', authMiddleware, async (req, res) => {
         console.log('error in finding friend in database', error);
     }
 });
+
+route.delete('/unfriend', authMiddleware, async (req, res) => {
+    try {
+        const friend_id = req.body.friend_id;console.log(friend_id, req.user.user_id)
+        const sql = 'DELETE FROM friends WHERE friend_id = ? AND user_id = ?';
+        const values = [friend_id, req.user.user_id];
+        const [unfriend] = await pool.query(sql, values);
+        if (unfriend.affectedRows != 0) { return res.status(200).json({ msg: 'unfriend sucessfully'}) }
+        else {return res.status(200).json({ msg: 'fail to unfriend' }) }
+    } catch (error) {
+        console.log('error in removinf friend', error);
+        return res.status(500).json({ msg: 'fail to unfriend' }) 
+    }
+})
 
 export default route;
