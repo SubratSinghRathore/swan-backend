@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { disconnect } from 'process';
 import { Server } from 'socket.io';
+import pool from '../router/database/mysql.database.js';
 
 const app = express();
 const server = createServer(app);
@@ -28,7 +29,18 @@ io.on('connect', (socket) => {
     //Client to server event
     socket.on('client-to-server-message', (obj) => {
         //Server to client event
-        socket.to(obj.to).emit('server-to-client-message', obj.message);
+        socket.to(obj.to).emit('server-to-client-message', obj);
+        //Saving to database
+        try {
+            (async function (obj) {
+                const sql = 'INSERT INTO messages(sender_id, receiver_id, message) VALUES(?, ?, ?)';
+                const values = [obj.from, obj.to, obj.message];
+                await pool.query(sql, values);
+            })(obj);
+        } catch (error) {
+            console.log('error in storing chat', error);
+        }
+
     });
 
 
