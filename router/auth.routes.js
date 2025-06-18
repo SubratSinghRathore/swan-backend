@@ -334,4 +334,16 @@ auth.post('/update/profile', authMiddleware, async (req, res) => {
     }
 })
 
+auth.post('/search', authMiddleware, async (req, res) => {
+    try {
+        const user_name = req.body.user_name;
+        const sql = 'SELECT user_id, user_name, user_profile_url FROM users WHERE user_name LIKE ? LIMIT ?';
+        const values = [`%${user_name}%`, 10];
+        const [allUsers] = await pool.query(sql, values);
+        return  res.status(200).json({ allUsers });
+    } catch (error) {
+        console.log('error in search users', error);
+    }
+});
+
 export default auth;

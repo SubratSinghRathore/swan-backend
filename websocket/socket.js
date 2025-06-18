@@ -14,7 +14,7 @@ const io = new Server(server, {
 });
 
 const allUsers = new Map();
-io.on('connect', (socket) => {
+io.on('connect', (socket) => {console.log("a")
     const token = socket.handshake.headers.cookie;
     // Setting as online user and joining to their private room of their user_id
     socket.on('setStatus', (user_id) => {
