@@ -44,4 +44,16 @@ router.put('/like', authMiddleware, async (req, res) => {
     }
 });
 
+router.get('/all', authMiddleware, async (req, res) => {
+    try {
+        const user_id = req.user.user_id;
+        const sql = 'SELECT * FROM posts WHERE origin = ?';
+        const values = [user_id];
+        const [allPosts] = await pool.query(sql, user_id);
+        res.send(allPosts);
+    } catch (error) {
+        console.log('error in fetching all posts fro specific user', error);
+    }
+});
+
 export default router;

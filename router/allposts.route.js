@@ -27,6 +27,6 @@ route.post('/post/origin', authMiddleware, async (req, res) => {
     } catch (error) {
         console.log('error in origin post', error);
     }
-})
+});
 
 export default route;
