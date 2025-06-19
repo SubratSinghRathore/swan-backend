@@ -14,7 +14,7 @@ const io = new Server(server, {
 });
 
 const allUsers = new Map();
-io.on('connect', (socket) => {console.log("a")
+io.on('connect', (socket) => {console.log("user connected", socket);
     const token = socket.handshake.headers.cookie;
     // Setting as online user and joining to their private room of their user_id
     socket.on('setStatus', (user_id) => {
@@ -29,7 +29,7 @@ io.on('connect', (socket) => {console.log("a")
     //Client to server event
     socket.on('client-to-server-message', (obj) => {
         //Server to client event
-        socket.to(obj.to).emit('server-to-client-message', obj);
+        socket.to(obj.to).emit('server-to-client-message', obj);console.log("sending msg", obj.message);
         //Saving to database
         try {
             (async function (obj) {
