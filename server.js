@@ -12,7 +12,7 @@ import feed from './router/allposts.route.js';
 import message from './router/message.route.js';
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: '*',
   credentials: true,              // Allow cookies and credentials
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Custom-Header']
