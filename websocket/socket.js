@@ -14,14 +14,14 @@ const io = new Server(server, {
 });
 
 const allUsers = new Map();
-io.on('connect', (socket) => {console.log("a")
-    const token = socket.handshake.headers.cookie;
+io.on('connect', (socket) => {
+
     // Setting as online user and joining to their private room of their user_id
     socket.on('setStatus', (user_id) => {
         allUsers.set(user_id, socket.id);
         socket.join(user_id);
     });
-
+    
     //Sending back all online users
     socket.emit('allUsers', Array.from(allUsers));
 

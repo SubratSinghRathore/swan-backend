@@ -13,7 +13,7 @@ const genToken = (user_name, user_email, user_id, res) => {
     res.cookie('jwt', token, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: "None",
+        sameSite: 'none',
         secure: process.env.JWT_SECURE !== "development"
     });
     return token;
