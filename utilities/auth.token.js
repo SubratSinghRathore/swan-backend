@@ -14,7 +14,8 @@ const genToken = (user_name, user_email, user_id, res) => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
         sameSite: 'none',
-        secure: process.env.JWT_SECURE !== "development"
+        secure: process.env.JWT_SECURE !== "development",
+        domain: 'swan-backend.onrender.com' 
     });
     return token;
 }

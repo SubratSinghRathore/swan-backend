@@ -36,7 +36,7 @@ auth.get('/me', authMiddleware, async (req, res) => {
     });
 });
 
-auth.get('/users',authMiddleware ,async (req, res) => {
+auth.get('/users', authMiddleware, async (req, res) => {
     try {
         const user_id = req.user.user_id;
         const sql = 'SELECT user_id, user_name, user_profile_url FROM users WHERE user_id != ?';
@@ -176,7 +176,13 @@ auth.post("/login", async (req, res) => {
 
 
 auth.post("/logout", async (req, res) => {
-    res.cookie('jwt', '', { maxAge: 0 });
+    res.cookie('jwt', '', {
+        maxAge: 0,
+        httpOnly: true,
+        sameSite: 'none',
+        secure: process.env.JWT_SECURE !== "development",
+        domain: 'swan-backend.onrender.com'
+    });
     res.status(200).json({ msg: 'logout successfully' });
 })
 
@@ -216,7 +222,7 @@ auth.post('/update/profile', authMiddleware, async (req, res) => {
                     });
                 } else {
 
-                    const uploadPicture = await cloudinary.uploader.upload(profile_pic, {width: 1000, height: 1000, crop: "auto", gravity: "auto"});
+                    const uploadPicture = await cloudinary.uploader.upload(profile_pic, { width: 1000, height: 1000, crop: "auto", gravity: "auto" });
                     const user_profile_url = uploadPicture.secure_url;
 
                     //reseting new profile picture
@@ -340,7 +346,7 @@ auth.post('/search', authMiddleware, async (req, res) => {
         const sql = 'SELECT user_id, user_name, user_profile_url FROM users WHERE user_name LIKE ? LIMIT ?';
         const values = [`%${user_name}%`, 10];
         const [allUsers] = await pool.query(sql, values);
-        return  res.status(200).json({ allUsers });
+        return res.status(200).json({ allUsers });
     } catch (error) {
         console.log('error in search users', error);
     }
