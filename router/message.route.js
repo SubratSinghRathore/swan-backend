@@ -78,9 +78,10 @@ route.delete('/unfriend', authMiddleware, async (req, res) => {
     }
 })
 
-route.post('/chats', async (req, res) => {
+route.post('/chats',authMiddleware, async (req, res) => {
     try {
-        const { user_id, friend_id } = req.body;
+        const user_id = req.user.user_id;
+        const { friend_id } = req.body;
         const sql = 'SELECT sender_id, message FROM messages WHERE (sender_id = ? AND receiver_id = ?) or (sender_id = ? AND receiver_id = ?) ORDER BY TIMESTAMP';
         const values  = [user_id, friend_id, friend_id, user_id];
         const [messages] = await pool.query(sql, values);
@@ -88,6 +89,31 @@ route.post('/chats', async (req, res) => {
     } catch (error) {
         console.log('error in fetching messages from DB', error);
         return res.status(500).json({msg: 'simething went erong'});
+    }
+})
+
+route.get('/notification', authMiddleware, async (req, res) => {
+    try {
+        const sql = 'SELECT * FROM notifications WHERE receiver_id = ?';
+        const values = [req.user.user_id];
+        const [notifications] = await pool.query(sql, values);
+        return res.status(200).json({notifications});
+    } catch (error) {
+        console.log('error in fetching notifications', error);
+        return res.status(500).json({ msg: "something went wrong" });
+    }
+})
+
+route.delete('/clear-notification', authMiddleware, async(req, res) => {
+    try {
+        const { receiver_id } = req.query;
+        const sql = 'DELETE FROM notifications WHERE receiver_id = ?';
+        const values = [receiver_id];
+        await pool.query(sql, values);
+        return res.status(200).json({ msg: "all clear sucessful"});
+    } catch (error) {
+        console.log('error in clearing notification', error);
+        return res.status(200).json({ msg: "internal error"})
     }
 })
 
