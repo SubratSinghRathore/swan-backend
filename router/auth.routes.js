@@ -7,6 +7,7 @@ import pool from "./database/mysql.database.js"
 import authMiddleware from '../middleware/authMiddleware.js';
 import genToken from "../utilities/auth.token.js";
 import cloudinary from "../utilities/cloudinary.js";
+import sendOTP from "../utilities/otp.sender.js";
 
 auth.use(express.json());
 
@@ -50,56 +51,96 @@ auth.get('/users', authMiddleware, async (req, res) => {
     }
 });
 
-auth.post("/signup", async (req, res) => {
-    let { user_name, user_email, user_password, user_mobile_no, user_profile_url } = req.body;
+auth.post('/email/verify', async (req, res) => {
+    try {
+        const email = req.body.user_email;
+        const otp = Math.floor(100000 + Math.random() * 900000);
 
-    if (!user_mobile_no) user_mobile_no = null;
-    if (!user_profile_url) user_profile_url = null;
-    if (!user_name || !user_email || !user_password) {
-        res.status(400).json({
-            msg: "please fill all credentials"
-        })
-    } else {
+        //Saving details in DB
+        const sql = 'INSERT INTO otp_store(user_email, otp_code, expires_at) values(?, ?, NOW() + INTERVAL 10 MINUTE)';
+        const values = [email, otp];
+        const [savedDetail] = await pool.query(sql, values);
 
-        try {
-
-            //creating hash password
-            const salt = await bcrypt.genSalt(10);
-            const hashPassword = await bcrypt.hash(user_password, salt);
-
-            if (user_profile_url !== null) {
-                //creating user in database with user_profile_url
-                const sqlForCreatingUser = 'INSERT INTO users (user_id, user_name, user_email, user_password, user_mobile_no, user_profile_url) VALUES (?, ?, ?, ?, ?, ?)';
-                const valuesForCreatingUser = [null, user_name, user_email, hashPassword, user_mobile_no, user_profile_url];
-                await pool.query(sqlForCreatingUser, valuesForCreatingUser);
-            } else {
-                //creating user in database without user_profile_url
-                const sqlForCreatingUser = 'INSERT INTO users (user_id, user_name, user_email, user_password, user_mobile_no) VALUES (?, ?, ?, ?, ?)';
-                const valuesForCreatingUser = [null, user_name, user_email, hashPassword, user_mobile_no];
-                await pool.query(sqlForCreatingUser, valuesForCreatingUser);
-            }
-
-
-            //fetching user_id and user_profile_url from databade for jwt
-            const sqlForUserId = 'SELECT * FROM users WHERE user_name = ? AND user_password = ?';
-            const valuesForUserId = [user_name, hashPassword];
-            const [resultForUserId] = await pool.query(sqlForUserId, valuesForUserId);
-            const user_id = resultForUserId[0].user_id;
-            user_profile_url = resultForUserId[0].user_profile_url;
-
-            //configuring jwt token
-            genToken(user_name, user_email, user_id, res);
-
-            res.status(200).json({
-                user_id,
-                user_email,
-                user_name,
-                user_profile_url
-            });
-
-        } catch (error) {
-            console.log(error);
+        //Sending otp to user
+        if (savedDetail.affectedRows != 0) {
+            sendOTP(email, otp);
+            return res.status(200).json({ msg: 'otp sent successfully' });
+        } else {
+            return res.status(400).json({ msg: 'something went wrong' });
         }
+    } catch (error) {
+        console.log('error in verifying email', error);
+        return res.status(500).json({ msg: 'internal server error' });
+    }
+})
+
+auth.post("/signup", async (req, res) => {
+    try {
+
+
+        let { user_name, user_email, user_otp, user_password, user_mobile_no, user_profile_url } = req.body;
+
+        if (!user_mobile_no) user_mobile_no = null;
+        if (!user_profile_url) user_profile_url = null;
+        if (!user_name || !user_email || !user_password) {
+            res.status(400).json({
+                msg: "please fill all credentials"
+            })
+        } else {
+
+            //verifying user email
+            const sqlForverifyEmail =  'SELECT * FROM otp_store WHERE user_email = ? AND otp_code = ? AND expires_at > NOW()';
+            const valuesForVerifyEmail = [user_email, user_otp];
+            const [isCorrect] = await pool.query(sqlForverifyEmail, valuesForVerifyEmail);
+
+            if (isCorrect.length > 0) {
+                try {
+
+                    //creating hash password
+                    const salt = await bcrypt.genSalt(10);
+                    const hashPassword = await bcrypt.hash(user_password, salt);
+
+                    if (user_profile_url !== null) {
+                        //creating user in database with user_profile_url
+                        const sqlForCreatingUser = 'INSERT INTO users (user_id, user_name, user_email, user_password, user_mobile_no, user_profile_url) VALUES (?, ?, ?, ?, ?, ?)';
+                        const valuesForCreatingUser = [null, user_name, user_email, hashPassword, user_mobile_no, user_profile_url];
+                        await pool.query(sqlForCreatingUser, valuesForCreatingUser);
+                    } else {
+                        //creating user in database without user_profile_url
+                        const sqlForCreatingUser = 'INSERT INTO users (user_id, user_name, user_email, user_password, user_mobile_no) VALUES (?, ?, ?, ?, ?)';
+                        const valuesForCreatingUser = [null, user_name, user_email, hashPassword, user_mobile_no];
+                        await pool.query(sqlForCreatingUser, valuesForCreatingUser);
+                    }
+
+
+                    //fetching user_id and user_profile_url from databade for jwt
+                    const sqlForUserId = 'SELECT * FROM users WHERE user_name = ? AND user_password = ?';
+                    const valuesForUserId = [user_name, hashPassword];
+                    const [resultForUserId] = await pool.query(sqlForUserId, valuesForUserId);
+                    const user_id = resultForUserId[0].user_id;
+                    user_profile_url = resultForUserId[0].user_profile_url;
+
+                    //configuring jwt token
+                    genToken(user_name, user_email, user_id, res);
+
+                    res.status(200).json({
+                        user_id,
+                        user_email,
+                        user_name,
+                        user_profile_url
+                    });
+
+                } catch (error) {
+                    console.log(error);
+                    return res.status(500).json({ msg: 'internal server error' });
+                }
+            } else {
+                return res.status(401).json({ msg: 'OTP not match' });
+            }
+        }
+    } catch (error) {
+        console.log('error in signup', error);
+        return res.status(500).json({ msg: 'internal server error' });
     }
 
 });
