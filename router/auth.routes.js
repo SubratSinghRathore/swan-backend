@@ -89,7 +89,7 @@ auth.post("/signup", async (req, res) => {
         } else {
 
             //verifying user email
-            const sqlForverifyEmail =  'SELECT * FROM otp_store WHERE user_email = ? AND otp_code = ? AND expires_at > NOW()';
+            const sqlForverifyEmail = 'SELECT * FROM otp_store WHERE user_email = ? AND otp_code = ? AND expires_at > NOW()';
             const valuesForVerifyEmail = [user_email, user_otp];
             const [isCorrect] = await pool.query(sqlForverifyEmail, valuesForVerifyEmail);
 
@@ -326,35 +326,48 @@ auth.post('/update/profile', authMiddleware, async (req, res) => {
             }
 
         } else if (type === 'user_email') {
-            const new_user_email = req.body.user_email;
             try {
+                const new_user_email = req.body.new_user_email;
+                const otp = req.body.otp;
                 if (!new_user_email) {
                     return res.status(400).json({ msg: "mail not found retry again" })
                 } else {
-                    const sql = 'UPDATE users SET user_email = ? WHERE user_id = ?';
-                    const values = [new_user_email, req.user.user_id];
-                    const [{ affectedRows, changedRows }] = await pool.query(sql, values);
-                    if (affectedRows === 0) {
-                        return res.status(404).json({ msg: 'user not found' });
-                    }
-                    if (changedRows === 0) {
-                        return res.status(200).json({ msg: 'No update needed, email unchanged' });
+                    //verifying user email
+                    const sqlForverifyEmail = 'SELECT * FROM otp_store WHERE user_email = ? AND otp_code = ? AND expires_at > NOW()';
+                    const valuesForVerifyEmail = [new_user_email, otp];
+                    const [isCorrect] = await pool.query(sqlForverifyEmail, valuesForVerifyEmail);
+
+                    if (isCorrect.length > 0) {
+                        //updating email
+                        const sql = 'UPDATE users SET user_email = ? WHERE user_id = ?';
+                        const values = [new_user_email, req.user.user_id];
+                        const [{ affectedRows, changedRows }] = await pool.query(sql, values);
+                        if (affectedRows === 0) {
+                            return res.status(404).json({ msg: 'user not found' });
+                        }
+                        if (changedRows === 0) {
+                            return res.status(200).json({ msg: 'No update needed, email unchanged' });
+                        }
+
+                        //sending new twt token with updated email
+                        genToken(req.user.user_name, new_user_email, req.user.user_id, res);
+
+                        return res.status(200).json({ msg: 'email updated successfully' });
+                    } else {
+                        return res.status(401).json({ msg: 'OTP not match' });
                     }
 
-                    //sending new twt token with updated email
-                    genToken(req.user.user_name, new_user_email, req.user.user_id, res);
 
-                    return res.status(200).json({ msg: 'email updated successfully' });
                 }
             } catch (error) {
                 console.log(error);
                 return res.status(500).json({ msg: 'internal server error' });
             }
         } else if (type === 'user_mobile_no') {
-            const new_user_mobile_no = req.body.user_mobile_no;
             try {
+                const new_user_mobile_no = req.body.user_mobile_no;
                 if (!new_user_mobile_no) {
-                    return res.status(400).json({ msg: "mobile no not found retry again" })
+                    return res.status(400).json({ msg: "mobile no not found retry again" });
                 } else {
                     const sql = 'UPDATE users SET user_mobile_no = ? WHERE user_id = ?';
                     const values = [new_user_mobile_no, req.user.user_id];
