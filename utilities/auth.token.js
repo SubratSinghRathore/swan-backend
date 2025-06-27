@@ -15,7 +15,7 @@ const genToken = (user_name, user_email, user_id, res) => {
         httpOnly: true,
         sameSite: 'none',
         secure: process.env.JWT_SECURE !== "development",
-        domain: 'swan-backend.onrender.com' 
+        domain: 'swan-backend.onrender.com'
     });
     return token;
 }
