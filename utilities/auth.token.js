@@ -13,9 +13,9 @@ const genToken = (user_name, user_email, user_id, res) => {
     res.cookie('jwt', token, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        sameSite: 'none',
+        sameSite: 'strict',
         secure: process.env.JWT_SECURE !== "development",
-        domain: 'swan-backend.onrender.com'
+        // domain: 'swan-backend.onrender.com'
     });
     return token;
 }

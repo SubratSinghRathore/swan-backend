@@ -21,7 +21,7 @@ io.on('connect', (socket) => {
         allUsers.set(user_id, socket.id);
         socket.join(user_id);
     });
-    
+
     //Sending back all online users
     socket.emit('allUsers', Array.from(allUsers));
 
@@ -40,6 +40,20 @@ io.on('connect', (socket) => {
         } catch (error) {
             console.log('error in storing chat', error);
         }
+
+        //adding notification if user is offline
+        if (!allUsers.has(obj.to)) {
+            try {
+                (async function (obj) {
+                    const sql = 'INSERT INTO notifications(sender_id, receiver_id, notification_type, notification_description) VALUES(?, ?, ?, ?)';
+                    const values = [obj.from, obj.to, 'message', obj.message];
+                    await pool.query(sql, values);
+                })(obj)
+            } catch (error) {
+                console.log('error in sending message notification', error);
+            }
+        }
+
 
     });
 
