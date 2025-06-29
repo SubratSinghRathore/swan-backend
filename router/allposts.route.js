@@ -9,7 +9,7 @@ route.post('/posts', authMiddleware, async (req, res) => {
     try {
         const offset = parseInt(req.body.offset);
         const sql = 'SELECT * FROM posts ORDER BY created_at DESC LIMIT ? offset ?'
-        const values = [15, offset];
+        const values = [10, offset];
         const [posts] = await pool.query(sql, values);
         return res.status(200).json({ posts: posts });
     } catch (error) {
