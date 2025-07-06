@@ -17,6 +17,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Custom-Header']
 }));
+app.options('*', cors());
 app.use(cookieParser());
 app.use(express.json({limit: '10mb'}));
 app.use("/auth", auth);
