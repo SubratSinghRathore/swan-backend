@@ -63,7 +63,7 @@ auth.post('/email/verify', async (req, res) => {
 
         //Sending otp to user
         if (savedDetail.affectedRows != 0) {
-            sendOTP(email, otp, res);
+            sendOTP(email, otp);
             return res.status(200).json({ msg: 'otp sent successfully' });
         } else {
             return res.status(400).json({ msg: 'something went wrong' });

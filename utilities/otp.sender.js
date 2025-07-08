@@ -8,7 +8,7 @@ const transport = nodemailer.createTransport({
     }
 });
 
-const sendOTP = async (userEmail, otp, res) => {
+const sendOTP = async (userEmail, otp) => {
     const mailOptions = {
         from: process.env.SWANCHAT_MAIL,
         to: userEmail,
@@ -32,7 +32,6 @@ const sendOTP = async (userEmail, otp, res) => {
         await transport.sendMail(mailOptions);
     } catch (error) {
         console.log('error in sending mail', error);
-        return res.status(401).json({ msg: 'invalid email'});
     }
 }
 
